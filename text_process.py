@@ -15,7 +15,7 @@ open=codecs.open
 class keyword(object):
     def Chinese_Stopwords(self):          #导入停用词库
         stopword=[]
-        cfp=open('data/stopWord.txt','r+','utf-8')   #停用词的txt文件
+        cfp=open('stopWord.txt','r+','utf-8')   #停用词的txt文件
         for line in cfp:
             for word in line.split():
                 stopword.append(word)
@@ -69,10 +69,36 @@ class keyword(object):
     def __init__(self, filename):
         self.filename = filename
 
+class SummaryInformation():
+    def __init__(self):
+        with open("FROM.txt",'r','utf-8') as f:
+        # 行数
+            self.cnt_from = len(f.readlines())
+            self.word_from = len(open("FROM.txt",'r','utf-8').read().rstrip())
+        with open("TO.txt",'r','utf-8') as f:
+            self.cnt_to = len(open("TO.txt", "r",'utf-8').readlines())
+            # 字数
+            self.word_to = len(open("TO.txt",'r','utf-8').read().rstrip())
+    def 
+
 if __name__=='__main__':
-    path = 'data/'
-    roots = os.listdir(path)
-    files = ["FROM.txt", "TO.txt", "z.txt"]
+    # 行数
+    cnt_from = len(open("FROM.txt",'r','utf-8').readlines())
+    cnt_to = len(open("TO.txt", "r",'utf-8').readlines())
+    # 字数
+    word_from = len(open("FROM.txt",'r','utf-8').read().rstrip())
+    word_to = len(open("TO.txt",'r','utf-8').read().rstrip())
+    if cnt_from < cnt_to:
+        print("你给ta发送了{}条消息，而ta给你发送了{}条消息".format(cnt_to, cnt_from))
+        print("你的总字数为{}, ta的总字数为{}".format(word_to, word_from))
+        print("你给ta的消息平均字数为{:.3}, 而ta给你消息平均字数为{:.3}".format(word_to/cnt_to, word_from/cnt_from))
+    else:
+        print("ta给你发送了{}条消息，而你给ta发送了{}条消息".format(cnt_from, cnt_to))
+        print("ta的总字数为{}, 你的总字数为{}".format(word_from, word_to))
+        print("ta给你的消息平均字数为{:.3}, 而你给ta消息平均字数为{:.3}".format(word_from/cnt_from, word_to/cnt_to))
+
+    print("---------")
+    files = ["FROM.txt", "TO.txt"]
     for file in files:
         kw = keyword(file)
         wl = kw.Run()
@@ -83,6 +109,6 @@ if __name__=='__main__':
                                 font_path='msyh.ttc')
         txt = " ".join(wl)
         w.generate(txt)
-
         # 将词云图片导出到当前文件夹
         w.to_file("wordcloud_"+file[:-4]+'.png')
+    
