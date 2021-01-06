@@ -8,6 +8,7 @@ import os
 import time
 import string
 import wordcloud
+from zhon import hanzi
 from nltk.probability import FreqDist
 open=codecs.open
 
@@ -28,7 +29,11 @@ class keyword(object):
         word_str = re.sub(r'\n+', ' ', word_str)  # trans 换行 to空格
         word_str = re.sub(r'\t+', ' ', word_str)  # trans Tab to空格
         word_str = re.sub(r"[\s+\.\!\/_,$%^*(+\"\']+|[+——；！，”。《》，。：“？、~@#￥%……&*（）1234567①②③④)]+", "", word_str)
-  
+        # 去除中英文标点符号
+        word_str = re.sub(r"[%s]+" %hanzi.punctuation, "",word_str)
+        word_str = re.sub(r"[%s]+" %string.punctuation, "",word_str)
+        word_str = re.sub(r"[→]+", "",word_str)
+        self.frequency(word_str)
         wordlist = list(jieba.cut(word_str))#jieba.cut  把字符串切割成词并添加至一个列表
         wordlist_N = []
         chinese_stopwords=self.Chinese_Stopwords()
@@ -43,11 +48,12 @@ class keyword(object):
         words = pseg.cut(word_str)
         word_list = []
         for wds in words:
-            # 筛选自定义词典中的词，和各类名词，自定义词库的词在没设置词性的情况下默认为x词性，即词的flag词性为x
-            if wds.flag == 'x' and wds.word != ' ' and wds.word != 'ns' \
-                    or re.match(r'^n', wds.flag) != None \
-                            and re.match(r'^nr', wds.flag) == None:
-                word_list.append(wds.word)
+            if wds.word != ' ' and wds.word != 'ns':
+                # 筛选自定义词典中的词，和各类名词、动词、形容词
+                # 自定义词库的词在没设置词性的情况下默认为x词性，即词的flag词性为x
+                if wds.flag == 'x' or re.match(r'^n', wds.flag) != None or re.match(r'^a', wds.flag) \
+                    or re.match(r'^v', wds.flag) != None != None and re.match(r'^nr', wds.flag) == None:
+                    word_list.append(wds.word)
         return word_list
 
     def sort_item(self,item):#排序函数，正序排序
@@ -57,13 +63,33 @@ class keyword(object):
         List=list(sorted(vocab,key=lambda v:v[1],reverse=1))
         return List
 
+    def frequency(self, novel):
+        print("{} 的词频统计".format(self.filename))
+        novelList = list(jieba.cut(novel))
+        novelSet = set(novelList) - set(self.Chinese_Stopwords())
+        novelDict = {}
+        # 统计出词频字典
+        for word in novelSet:
+            novelDict[word] = novelList.count(word)
+
+        # 对词频进行排序
+        novelListSorted = list(novelDict.items())
+        novelListSorted.sort(key=lambda e: e[1], reverse=True)
+
+        # 打印前20词频
+        topWordNum = 0
+        for topWordTup in novelListSorted:
+            if topWordNum == 20:
+                break
+            print(topWordTup)
+            topWordNum += 1
+
     def Run(self):
-        Apage=open(self.filename,'r+','utf-8')
-        Word=Apage.read()                       #先读取整篇文章
-        Wordp=self.Word_pseg(Word)              #对整篇文章进行词性的挑选
-        New_str=''.join(Wordp)
-        Wordlist=self.Word_cut_list(New_str)    #对挑选后的文章进行分词
-        Apage.close()
+        with open(self.filename,'r+','utf-8') as Apage:
+            Word=Apage.read()                       #先读取整篇文章
+            Wordp=self.Word_pseg(Word)              #对整篇文章进行词性的挑选
+            New_str=''.join(Wordp)
+            Wordlist=self.Word_cut_list(New_str)    #对挑选后的文章进行分词
         return  Wordlist
 
     def __init__(self, filename):
@@ -79,7 +105,38 @@ class SummaryInformation():
             self.cnt_to = len(open("TO.txt", "r",'utf-8').readlines())
             # 字数
             self.word_to = len(open("TO.txt",'r','utf-8').read().rstrip())
-    def 
+
+def frequency(filename):
+    # 从文件读入小说
+    with open(filename, 'r', encoding='utf-8') as novelFile:
+        novel = novelFile.read()
+
+    # 将小说中的特殊符号过滤
+    # novel = Word_cut_list(novel)
+
+    # 从文件独处无意义词
+    with open('meaningless.txt', 'r', encoding='UTF-8') as meaninglessFile:
+        mLessSet = set(meaninglessFile.read().split('\n'))
+    mLessSet.add(' ')
+
+    novelList = list(jieba.cut(novel))
+    novelSet = set(novelList) - mLessSet # 将无意义词从词语集合中删除
+    novelDict = {}
+    # 统计出词频字典
+    for word in novelSet:
+        novelDict[word] = novelList.count(word)
+
+    # 对词频进行排序
+    novelListSorted = list(novelDict.items())
+    novelListSorted.sort(key=lambda e: e[1], reverse=True)
+
+    # 打印前20词频
+    topWordNum = 0
+    for topWordTup in novelListSorted:
+        if topWordNum == 20:
+            break
+        print(topWordTup)
+        topWordNum += 1
 
 if __name__=='__main__':
     # 行数
