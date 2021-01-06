@@ -14,7 +14,8 @@ open=codecs.open
 
 #定义一个keyword类
 class keyword(object):
-    def Chinese_Stopwords(self):          #导入停用词库
+    # 在stopWord.txt里面写入你不想要出现在词云里面的文字
+    def Chinese_Stopwords(self):
         stopword=[]
         cfp=open('stopWord.txt','r+','utf-8')   #停用词的txt文件
         for line in cfp:
@@ -48,11 +49,12 @@ class keyword(object):
         words = pseg.cut(word_str)
         word_list = []
         for wds in words:
-            if wds.word != ' ' and wds.word != 'ns':
+            # 排除空格和单个汉字
+            if wds.word != ' ' and wds.word != 'ns' and 1<len(wds.word):
                 # 筛选自定义词典中的词，和各类名词、动词、形容词
                 # 自定义词库的词在没设置词性的情况下默认为x词性，即词的flag词性为x
-                if wds.flag == 'x' or re.match(r'^n', wds.flag) != None or re.match(r'^a', wds.flag) \
-                    or re.match(r'^v', wds.flag) != None != None and re.match(r'^nr', wds.flag) == None:
+                if wds.flag == 'x' or re.match(r'^n', wds.flag) != None or re.match(r'^a', wds.flag) != None \
+                    or re.match(r'^v', wds.flag) != None and re.match(r'^nr', wds.flag) == None:
                     word_list.append(wds.word)
         return word_list
 
@@ -63,6 +65,7 @@ class keyword(object):
         List=list(sorted(vocab,key=lambda v:v[1],reverse=1))
         return List
 
+    # 用于统计词频
     def frequency(self, novel):
         print("{} 的词频统计".format(self.filename))
         novelList = list(jieba.cut(novel))
@@ -84,6 +87,7 @@ class keyword(object):
             print(topWordTup)
             topWordNum += 1
 
+    # 得到请理后的词列表
     def Run(self):
         with open(self.filename,'r+','utf-8') as Apage:
             Word=Apage.read()                       #先读取整篇文章
@@ -94,49 +98,6 @@ class keyword(object):
 
     def __init__(self, filename):
         self.filename = filename
-
-class SummaryInformation():
-    def __init__(self):
-        with open("FROM.txt",'r','utf-8') as f:
-        # 行数
-            self.cnt_from = len(f.readlines())
-            self.word_from = len(open("FROM.txt",'r','utf-8').read().rstrip())
-        with open("TO.txt",'r','utf-8') as f:
-            self.cnt_to = len(open("TO.txt", "r",'utf-8').readlines())
-            # 字数
-            self.word_to = len(open("TO.txt",'r','utf-8').read().rstrip())
-
-def frequency(filename):
-    # 从文件读入小说
-    with open(filename, 'r', encoding='utf-8') as novelFile:
-        novel = novelFile.read()
-
-    # 将小说中的特殊符号过滤
-    # novel = Word_cut_list(novel)
-
-    # 从文件独处无意义词
-    with open('meaningless.txt', 'r', encoding='UTF-8') as meaninglessFile:
-        mLessSet = set(meaninglessFile.read().split('\n'))
-    mLessSet.add(' ')
-
-    novelList = list(jieba.cut(novel))
-    novelSet = set(novelList) - mLessSet # 将无意义词从词语集合中删除
-    novelDict = {}
-    # 统计出词频字典
-    for word in novelSet:
-        novelDict[word] = novelList.count(word)
-
-    # 对词频进行排序
-    novelListSorted = list(novelDict.items())
-    novelListSorted.sort(key=lambda e: e[1], reverse=True)
-
-    # 打印前20词频
-    topWordNum = 0
-    for topWordTup in novelListSorted:
-        if topWordNum == 20:
-            break
-        print(topWordTup)
-        topWordNum += 1
 
 if __name__=='__main__':
     # 行数
@@ -154,6 +115,7 @@ if __name__=='__main__':
         print("ta的总字数为{}, 你的总字数为{}".format(word_from, word_to))
         print("ta给你的消息平均字数为{:.3}, 而你给ta消息平均字数为{:.3}".format(word_from/cnt_from, word_to/cnt_to))
 
+    # 生成词云图片
     print("---------")
     files = ["FROM.txt", "TO.txt"]
     for file in files:
