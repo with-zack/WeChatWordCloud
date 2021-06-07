@@ -1,5 +1,5 @@
 import itchat
-subject = '没有人问过莱卡' #需要记录的对象的昵称
+subject = 'blahblah' #需要记录的对象的昵称
 @itchat.msg_register(itchat.content.TEXT)
 def print_content(msg):
     user = msg['User']
